@@ -1,4 +1,7 @@
 package com.example.musicalquizz.network
 
-class TrackDto {
-}
+import com.example.musicalquizz.model.Track
+
+data class TrackResponse(
+    val data: List<Track>
+)

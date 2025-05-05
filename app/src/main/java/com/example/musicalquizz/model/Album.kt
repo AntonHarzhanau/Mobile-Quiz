@@ -1,4 +1,6 @@
 package com.example.musicalquizz.model
 
-class Album {
-}
+data class Album(
+    val title: String,
+    val cover: String
+)

@@ -5,5 +5,8 @@
     <string name="Profile">Profile</string>
     <string name="Settings">Settings</string>
     <string name="Playlist">Playlist</string>
+    <string name="search_query_hint">Enter a song, album or artist</string>
+    <string name="btn_search_text">Search</string>
+    <string name="search_results_description">Search Result</string>
 
 </resources>
