@@ -6,16 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.musicalquizz.db.dao.PlaylistDao
 import com.example.musicalquizz.db.dao.PlaylistTrackDao
+import com.example.musicalquizz.db.dao.QuizDao
 import com.example.musicalquizz.db.entities.PlaylistEntity
 import com.example.musicalquizz.db.entities.PlaylistTrackEntity
+import com.example.musicalquizz.db.entities.QuizEntity
 
 @Database(
-    entities = [PlaylistEntity::class, PlaylistTrackEntity::class],
+    entities = [PlaylistEntity::class, PlaylistTrackEntity::class, QuizEntity::class],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao
     abstract fun playlistTrackDao(): PlaylistTrackDao
+    abstract fun quizDao(): QuizDao
 
     companion object {
         // singleton Room database

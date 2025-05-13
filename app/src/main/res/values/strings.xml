@@ -9,5 +9,9 @@
     <string name="btn_search_text">Search</string>
     <string name="search_results_description">Search Result</string>
     <string name="create_playlist">Create Playlist</string>
+    <string name="menu_quiz_btn">Quiz</string>
+    <string name="create_quiz_btn">Create Quiz</string>
+    <string name="delete">Delete</string>
+    <string name="create_quiz">Create Quiz</string>
 
 </resources>

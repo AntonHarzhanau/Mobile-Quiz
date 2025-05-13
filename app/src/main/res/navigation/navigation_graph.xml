@@ -108,5 +108,32 @@
         </action>
     </fragment>
 
+    <fragment
+        android:id="@+id/quizListFragment"
+        android:name="com.example.musicalquizz.ui.fragments.QuizListFragment">
+        <!-- действие к деталям квиза -->
+        <action
+            android:id="@+id/action_quizListFragment_to_quizDetailFragment"
+            app:destination="@id/quizDetailFragment">
+            <argument
+                android:name="quizId"
+                app:argType="long" />
+        </action>
+        <!-- действие к экрану создания -->
+        <action
+            android:id="@+id/action_quizListFragment_to_createQuizFragment"
+            app:destination="@id/createQuizFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/quizDetailFragment"
+        android:name="com.example.musicalquizz.ui.fragments.QuizDetailFragment">
+        <argument android:name="quizId" app:argType="long"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/createQuizFragment"
+        android:name="com.example.musicalquizz.ui.fragments.CreateQuizFragment" />
+
 
 </navigation>
