@@ -1,49 +1,29 @@
 package com.example.musicalquizz.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.musicalquizz.model.Track
+import androidx.lifecycle.*
 import com.example.musicalquizz.network.DeezerApi
 import kotlinx.coroutines.launch
+import com.example.musicalquizz.network.SearchItem
 import timber.log.Timber
 
 class SearchViewModel : ViewModel() {
-    private val _results = MutableLiveData<List<Track>>()
-    val results: LiveData<List<Track>> = _results
 
-    private var currentQuery: String = ""
-    private var currentIndex: Int = 0
-    private var isLoading = false
-    private var allLoaded = false
+    private val _searchResults = MutableLiveData<List<SearchItem>>()
+    val searchResults: LiveData<List<SearchItem>> = _searchResults
 
-    fun search(query: String) {
-        currentQuery = query
-        currentIndex = 0
-        allLoaded = false
-        _results.value = emptyList()
-        loadMore()
-    }
-
-    fun loadMore() {
-        if (isLoading || allLoaded) return
-        isLoading = true
-
+    fun search(query: String, isAlbum: Boolean) {
         viewModelScope.launch {
             try {
-                val response = DeezerApi.retrofitService.searchTracks(currentQuery, currentIndex)
-                val newTracks = response.data
-                val currentList = _results.value.orEmpty()
-                _results.value = currentList + newTracks
-                currentIndex += newTracks.size
-                if (newTracks.size < 25) allLoaded = true
+                if (isAlbum) {
+                    val response = DeezerApi.retrofitService.searchAlbums(query)
+                    _searchResults.value = response.data.map { SearchItem.AlbumItem(it) }
+                } else {
+                    val response = DeezerApi.retrofitService.searchTracks(query)
+                    _searchResults.value = response.data.map { SearchItem.TrackItem(it) }
+                }
             } catch (e: Exception) {
-                Timber.Forest.tag("SearchViewModel").e("Search failed: ${e.message}")
-                _results.value = emptyList()
-            }
-            finally {
-                isLoading = false
+                Timber.tag("SearchViewModel").e("Search error: ${e.message}")
+                _searchResults.value = emptyList()
             }
         }
     }

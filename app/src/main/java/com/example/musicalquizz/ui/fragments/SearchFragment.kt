@@ -1,88 +1,76 @@
 package com.example.musicalquizz.ui.fragments
 
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.EditorInfo
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.musicalquizz.adapter.SearchAdapter
 import com.example.musicalquizz.databinding.FragmentSearchBinding
 import com.example.musicalquizz.viewmodel.SearchViewModel
+import com.google.android.material.tabs.TabLayout
+
 
 class SearchFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = SearchFragment()
-    }
-
     private val viewModel: SearchViewModel by viewModels()
-    private lateinit var adapter: SearchAdapter
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
+    private lateinit var adapter: SearchAdapter
+    private var isAlbumMode = false
 
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSearchBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
+        FragmentSearchBinding.inflate(inflater, container, false).also { _binding = it }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = SearchAdapter()
-        val recyclerView = binding.searchResults
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.adapter = adapter
+        super.onViewCreated(view, savedInstanceState)
+        adapter = SearchAdapter(
+            onTrackClick = { track ->
+                findNavController().navigate(
+                    SearchFragmentDirections.actionSearchToTrackDetailsFragment(track.id)
+                )
+            },
+            onAlbumClick = { album ->
+                findNavController().navigate(
+                    SearchFragmentDirections.actionSearchToAlbumDetailsFragment(album.id)
+                )
+            }
+        )
 
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(rv, dx, dy)
-                val layoutManager = rv.layoutManager as LinearLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisible = layoutManager.findLastVisibleItemPosition()
-                if (lastVisible >= totalItemCount - 5) {
-                    viewModel.loadMore()
+        binding.searchResults.layoutManager = LinearLayoutManager(requireContext())
+        binding.searchResults.adapter = adapter
+
+        // Таб-menu
+        binding.searchTabLayout.apply {
+            addTab(newTab().setText("Tracks"), true)
+            addTab(newTab().setText("Albums"))
+            addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+                override fun onTabSelected(tab: TabLayout.Tab) {
+                    isAlbumMode = tab.position == 1
                 }
-            }
-        })
-
-        val searchInput = binding.searchInput
-        val searchButton = binding.searchButton
-
-        fun startSearch() {
-            val query = searchInput.text.toString().trim()
-            if (query.isNotEmpty()) {
-                viewModel.search(query)
-            }
+                override fun onTabUnselected(tab: TabLayout.Tab) {}
+                override fun onTabReselected(tab: TabLayout.Tab) {}
+            })
         }
 
-        searchInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                startSearch()
-                true
-            } else false
+
+        binding.searchButton.setOnClickListener { doSearch() }
+        binding.searchInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) { doSearch(); true } else false
         }
 
-        searchButton.setOnClickListener {
-            startSearch()
-        }
-
-        viewModel.results.observe(viewLifecycleOwner) { tracks ->
-            adapter.submitList(tracks)
-        }
+        viewModel.searchResults.observe(viewLifecycleOwner) { adapter.submitList(it) }
     }
+
+    private fun doSearch() {
+        val q = binding.searchInput.text.toString().trim()
+        if (q.isNotEmpty()) viewModel.search(q, isAlbumMode)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        adapter.releasePlayer()
     }
 }

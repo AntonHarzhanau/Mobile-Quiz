@@ -8,5 +8,6 @@
     <string name="search_query_hint">Enter a song, album or artist</string>
     <string name="btn_search_text">Search</string>
     <string name="search_results_description">Search Result</string>
+    <string name="create_playlist">Create Playlist</string>
 
 </resources>

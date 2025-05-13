@@ -1,80 +1,87 @@
 package com.example.musicalquizz.adapter
 
-import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
+import com.example.musicalquizz.model.Album
 import com.example.musicalquizz.model.Track
+import com.example.musicalquizz.network.SearchItem
 
-class SearchAdapter : ListAdapter<Track, SearchAdapter.TrackViewHolder>(DiffCallback()) {
 
-    private var mediaPlayer: MediaPlayer? = null
-    private var currentTrackId: Long? = null
+class SearchAdapter(
+    private val onTrackClick: (Track) -> Unit,
+    private val onAlbumClick: (Album) -> Unit
+) : ListAdapter<SearchItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
-    class TrackViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.findViewById(R.id.track_title)
-        val artist: TextView = view.findViewById(R.id.track_artist)
-        val duration: TextView = view.findViewById(R.id.track_duration)
-        val cover: ImageView = view.findViewById(R.id.album_cover)
-        val card: View = view.findViewById(R.id.track_card)
-
+    companion object {
+        private const val TYPE_TRACK = 0
+        private const val TYPE_ALBUM = 1
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_track, parent, false)
-        return TrackViewHolder(view)
+    override fun getItemViewType(position: Int) = when (getItem(position)) {
+        is SearchItem.TrackItem -> TYPE_TRACK
+        is SearchItem.AlbumItem -> TYPE_ALBUM
     }
 
-    override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
-        val track = getItem(position)
-
-        holder.title.text = track.title
-        holder.artist.text = track.artist.name
-        holder.duration.text = formatDuration(track.duration.toInt())
-
-        Glide.with(holder.itemView)
-            .load(track.album.cover)
-            .into(holder.cover)
-
-        holder.card.setOnClickListener {
-            if (currentTrackId == track.id && mediaPlayer?.isPlaying == true) {
-                // Press again: stop
-                mediaPlayer?.pause()
-                currentTrackId = null
-            } else {
-                // New track: stop old and play new
-                mediaPlayer?.release()
-                mediaPlayer = MediaPlayer().apply {
-                    setDataSource(track.preview)
-                    prepare()
-                    start()
-                }
-                currentTrackId = track.id
-            }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        return if (viewType == TYPE_TRACK) {
+            val v = inflater.inflate(R.layout.item_track, parent, false)
+            TrackViewHolder(v)
+        } else {
+            val v = inflater.inflate(R.layout.item_album, parent, false)
+            AlbumViewHolder(v)
         }
     }
 
-    private fun formatDuration(seconds: Int): String {
-        val min = seconds / 60
-        val sec = seconds % 60
-        return String.format("%d:%02d", min, sec)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (val item = getItem(position)) {
+            is SearchItem.TrackItem -> (holder as TrackViewHolder).bind(item.track)
+            is SearchItem.AlbumItem -> (holder as AlbumViewHolder).bind(item.album)
+        }
     }
 
-    fun releasePlayer() {
-        mediaPlayer?.release()
-        mediaPlayer = null
+    inner class TrackViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val cover: ImageView = view.findViewById(R.id.album_cover)
+        private val title: TextView  = view.findViewById(R.id.track_title)
+        private val artist: TextView = view.findViewById(R.id.track_artist)
+
+        fun bind(track: Track) {
+            title.text = track.title
+            artist.text = track.artist.name
+            Glide.with(itemView).load(track.album.cover).into(cover)
+            itemView.setOnClickListener { onTrackClick(track) }
+        }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Track>() {
-        override fun areItemsTheSame(oldItem: Track, newItem: Track) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Track, newItem: Track) = oldItem == newItem
+    inner class AlbumViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val cover: ImageView = view.findViewById(R.id.album_cover)
+        private val title: TextView  = view.findViewById(R.id.album_title)
+        private val artist: TextView = view.findViewById(R.id.album_artist)
+
+        fun bind(album: Album) {
+            title.text = album.title
+            artist.text = album.artist.name
+            Glide.with(itemView).load(album.cover).into(cover)
+            itemView.setOnClickListener { onAlbumClick(album) }
+        }
+    }
+
+    class DiffCallback : DiffUtil.ItemCallback<SearchItem>() {
+        override fun areItemsTheSame(old: SearchItem, new: SearchItem) = when {
+            old is SearchItem.TrackItem && new is SearchItem.TrackItem ->
+                old.track.id == new.track.id
+            old is SearchItem.AlbumItem && new is SearchItem.AlbumItem ->
+                old.album.id == new.album.id
+            else -> false
+        }
+        override fun areContentsTheSame(old: SearchItem, new: SearchItem) = old == new
     }
 }
+
+

@@ -1,4 +1,7 @@
 package com.example.musicalquizz.network
 
-class AlbumDto {
-}
+import com.example.musicalquizz.model.Album
+
+data class AlbumResponse (
+    val data: List<Album>
+)

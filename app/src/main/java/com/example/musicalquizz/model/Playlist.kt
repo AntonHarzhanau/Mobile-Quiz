@@ -1,4 +1,9 @@
 package com.example.musicalquizz.model
 
-class Playlist {
-}
+data class Playlist(
+    val id: Long,
+    var title: String,
+    var description: String,
+    var coverUri: String?,
+    val trackIds: MutableList<Long>
+)
