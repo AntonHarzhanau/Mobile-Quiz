@@ -16,13 +16,13 @@
             android:layout_height="150dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_playlist_placeholder"
-            android:contentDescription="Обложка плейлиста"/>
+            android:contentDescription="@string/playlist_cover"/>
 
         <Button
             android:id="@+id/btnPickCover"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Выбрать фото"
+            android:text="@string/pick_cover"
             android:layout_gravity="center"
             android:layout_marginTop="8dp"/>
 
@@ -30,13 +30,13 @@
             android:id="@+id/etTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Название"/>
+            android:hint="@string/title"/>
 
         <EditText
             android:id="@+id/etDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Описание"
+            android:hint="@string/description"
             android:inputType="textMultiLine"
             android:lines="3"/>
 
@@ -51,13 +51,13 @@
                 android:id="@+id/btnCancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Отмена"/>
+                android:text="@string/cancel"/>
 
             <Button
                 android:id="@+id/btnCreate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Создать"
+                android:text="@string/create"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
     </LinearLayout>

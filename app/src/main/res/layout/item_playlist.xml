@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@id/ivCover"
             android:layout_marginStart="8dp"
-            android:text="Название плейлиста"
+            android:text="@string/playlist_title"
             android:textStyle="bold"
             android:textSize="16sp"/>
 
@@ -36,7 +36,7 @@
             android:layout_toEndOf="@id/ivCover"
             android:layout_below="@id/tvTitle"
             android:layout_marginStart="8dp"
-            android:text="5 треков"
+            android:text="@string/n_tracks"
             android:textSize="14sp"
             android:textColor="#666"/>
 
@@ -47,6 +47,6 @@
             android:layout_alignParentEnd="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_more_vert"
-            android:contentDescription="Меню"/>
+            android:contentDescription="@string/menu"/>
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

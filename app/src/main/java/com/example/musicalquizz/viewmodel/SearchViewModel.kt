@@ -1,9 +1,9 @@
 package com.example.musicalquizz.viewmodel
 
 import androidx.lifecycle.*
-import com.example.musicalquizz.network.DeezerApi
+import com.example.musicalquizz.data.network.DeezerApi
 import kotlinx.coroutines.launch
-import com.example.musicalquizz.network.SearchItem
+import com.example.musicalquizz.data.network.SearchItem
 import timber.log.Timber
 
 class SearchViewModel : ViewModel() {

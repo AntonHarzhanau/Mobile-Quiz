@@ -9,14 +9,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.*
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
-import com.example.musicalquizz.network.DeezerApi
+import com.example.musicalquizz.data.network.DeezerApi
 import kotlinx.coroutines.launch
 import android.widget.*
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import com.example.musicalquizz.adapter.AlbumTracksAdapter
+import com.example.musicalquizz.data.db.entities.PlaylistTrackEntity
 import com.example.musicalquizz.databinding.FragmentAlbumDetailsBinding
-import com.example.musicalquizz.model.Track
-import com.example.musicalquizz.network.AlbumWithTracks
+import com.example.musicalquizz.data.model.Track
+import com.example.musicalquizz.data.network.AlbumWithTracks
 import com.example.musicalquizz.viewmodel.PlaylistViewModel
 
 
@@ -46,7 +48,7 @@ class AlbumDetailsFragment : Fragment() {
             // Open the details of the selected track
             findNavController().navigate(
                 AlbumDetailsFragmentDirections
-                    .actionAlbumDetailToTrackDetail(track.id)
+                    .actionAlbumDetailsFragmentToTrackDetailsFragment(track.id)
             )
         }
         binding.albumTrackList.apply {
@@ -83,38 +85,39 @@ class AlbumDetailsFragment : Fragment() {
      * and when selected, adds all the passed [tracks] to it.
      */
     private fun showPlaylistDialogForAlbum(tracks: List<Track>) {
-       vm.playlists.observe(viewLifecycleOwner) { playlists ->
-           if (playlists.isNullOrEmpty()) {
-               Toast.makeText(
-                   requireContext(),
-                   "Please create a playlist first",
-                   Toast.LENGTH_SHORT
-               ).show()
-               return@observe
-           }
+        val playlists = vm.playlists.value.orEmpty()
+        if (playlists.isEmpty()) {
+            Toast.makeText(requireContext(), "Create a playlist first", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-           val titles = playlists.map { it.title }.toTypedArray()
+        val titles = playlists.map { it.title }.toTypedArray()
+        AlertDialog.Builder(requireContext())
+            .setTitle("Select a playlist")
+            .setItems(titles) { _, which ->
+                val selected = playlists[which]
 
-           AlertDialog.Builder(requireContext())
-               .setTitle("Choose a playlist")
-               .setItems(titles) { _, which ->
-                   val selectedPl = playlists[which]
+                // Here: we observe it just once
+                val live = vm.tracks(selected.id)
+                val obs = object : Observer<List<PlaylistTrackEntity>> {
+                    override fun onChanged(existingTracks: List<PlaylistTrackEntity>) {
+                        live.removeObserver(this)  // remove the observer immediately
 
-                   // Subscribe to the tracks chosen playlist
-                   vm.tracks(selectedPl.id).observe(viewLifecycleOwner) { existingTracks ->
-                       val existingIds = existingTracks.map { it.trackId }
-                       val newTracks = tracks.filter {it.id !in existingIds}
+                        val existingIds = existingTracks.map { it.trackId }.toSet()
+                        val newOnes = tracks.filter { it.id !in existingIds }
+                        vm.addTracks(selected.id, newOnes)
 
-                       vm.addTracks(selectedPl.id, newTracks)
-                       Toast.makeText(
-                           requireContext(),
-                           "Added ${newTracks.size} track(s) в «${selectedPl.title}»",
-                           Toast.LENGTH_SHORT
-                       ).show()
-                   }
-               }.show()
-           }
-       }
+                        Toast.makeText(
+                            requireContext(),
+                            "Added ${newOnes.size} tracks to «${selected.title}»",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                live.observe(viewLifecycleOwner, obs)
+            }
+            .show()
+    }
 
 
     override fun onDestroyView() {

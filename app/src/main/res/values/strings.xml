@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Musical Quizz</string>
+    <string name="app_name">Musical Quiz</string>
     <string name="Home">Home</string>
     <string name="Search">Search</string>
     <string name="Profile">Profile</string>
@@ -13,5 +13,27 @@
     <string name="create_quiz_btn">Create Quiz</string>
     <string name="delete">Delete</string>
     <string name="create_quiz">Create Quiz</string>
+    <string name="select_cover">Select Cover</string>
+    <string name="quiz_name">Quiz name</string>
+    <string name="description">Description</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="question_count_format">%d questions</string>
+    <string name="play_btn">▶ Play</string>
+    <string name="enter_your_question">Enter your question</string>
+    <string name="add_answer">Add answer</string>
+    <string name="answer_text">Answer text</string>
+    <string name="start_quiz">Start Quiz</string>
+    <string name="enter_question_text">Enter question text</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="playlist_cover">Playlist cover</string>
+    <string name="pick_cover">Pick cover</string>
+    <string name="title">Title</string>
+    <string name="create">Create</string>
+    <string name="add_track">+ Add track</string>
+    <string name="playlist_title">Playlist title</string>
+    <string name="n_tracks">N tracks</string>
+    <string name="menu">Menu</string>
+    <string name="edit">Edit</string>
 
 </resources>

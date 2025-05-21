@@ -6,134 +6,225 @@
     android:id="@+id/navigation_graph"
     app:startDestination="@id/searchFragment">
 
-    <!-- Экран поиска -->
+    <!-- Search -->
     <fragment
         android:id="@+id/searchFragment"
         android:name="com.example.musicalquizz.ui.fragments.SearchFragment"
-        android:label="Поиск"
+        android:label="@string/Search"
         tools:layout="@layout/fragment_search">
-
-        <!-- Переход к деталям трека -->
         <action
             android:id="@+id/action_search_to_trackDetailsFragment"
             app:destination="@id/trackDetailsFragment" />
-
-        <!-- Переход к деталям альбома -->
         <action
             android:id="@+id/action_search_to_albumDetailsFragment"
             app:destination="@id/albumDetailsFragment" />
     </fragment>
 
-    <!-- Экран деталей трека -->
+    <!-- Track details -->
     <fragment
         android:id="@+id/trackDetailsFragment"
         android:name="com.example.musicalquizz.ui.fragments.TrackDetailsFragment"
-        android:label="Детали трека"
+        android:label="Track details"
         tools:layout="@layout/fragment_track_details">
         <argument
             android:name="trackId"
-            app:argType="long" />
+            app:argType="long"
+            android:defaultValue="0L"/>
     </fragment>
 
-    <!-- Экран деталей альбома -->
+    <!-- Album details -->
     <fragment
         android:id="@+id/albumDetailsFragment"
         android:name="com.example.musicalquizz.ui.fragments.AlbumDetailsFragment"
-        android:label="Детали альбома"
+        android:label="Album details"
         tools:layout="@layout/fragment_album_details">
         <argument
             android:name="albumId"
-            app:argType="long" />
+            app:argType="long"
+            android:defaultValue="0L"/>
         <action
-            android:id="@+id/action_albumDetail_to_trackDetail"
+            android:id="@+id/action_albumDetailsFragment_to_trackDetailsFragment"
             app:destination="@id/trackDetailsFragment" />
     </fragment>
 
+    <!-- Playlists -->
     <fragment
         android:id="@+id/playlistFragment"
-        android:name="com.example.musicalquizz.ui.fragments.PlaylistsFragment"
-        android:label="Плейлисты"
+        android:name="com.example.musicalquizz.ui.fragments.playlist.PlaylistsFragment"
+        android:label="Playlists"
         tools:layout="@layout/fragment_playlist">
         <action
-            android:id="@+id/action_playlists_to_createPlaylist"
+            android:id="@+id/action_playlistsFragment_to_createPlaylistFragment"
             app:destination="@id/createPlaylistFragment" />
         <action
-            android:id="@+id/action_playlists_to_playlistDetail"
-            app:destination="@id/playlistDetailFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:popEnterAnim="@anim/slide_in_left">
+            android:id="@+id/action_playlistsFragment_to_playlistDetailFragment"
+            app:destination="@id/playlistDetailFragment">
             <argument
                 android:name="playlistId"
-                app:argType="long" />
+                app:argType="long"
+                android:defaultValue="0L"/>
         </action>
     </fragment>
 
-    <!-- Фрагмент создания плейлиста -->
+    <!-- Create playlist -->
     <fragment
         android:id="@+id/createPlaylistFragment"
-        android:name="com.example.musicalquizz.ui.fragments.CreatePlaylistFragment"
-        android:label="Новый плейлист"
+        android:name="com.example.musicalquizz.ui.fragments.playlist.CreatePlaylistFragment"
+        android:label="Create playlist"
         tools:layout="@layout/fragment_create_playlist">
         <action
-            android:id="@+id/action_createPlaylist_to_playlists"
+            android:id="@+id/action_createPlaylistFragment_to_playlistFragment"
             app:destination="@id/playlistFragment"
             app:popUpTo="@id/playlistFragment"
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Детали плейлиста -->
+    <!-- Playlist details -->
     <fragment
         android:id="@+id/playlistDetailFragment"
-        android:name="com.example.musicalquizz.ui.fragments.PlaylistDetailFragment"
-        android:label="Детали плейлиста"
+        android:name="com.example.musicalquizz.ui.fragments.playlist.PlaylistDetailFragment"
+        android:label="Playlist details"
         tools:layout="@layout/fragment_playlist_detail">
         <argument
             android:name="playlistId"
-            app:argType="long" />
+            app:argType="long"
+            android:defaultValue="0L"/>
         <action
-            android:id="@+id/action_playlistDetail_to_search"
-            app:destination="@id/searchFragment">
-            <argument
-                android:name="playlistId"
-                app:argType="long" />
-        </action>
-
-        <!-- Вот новый action на TrackDetails -->
+            android:id="@+id/action_playlistDetailFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
         <action
-            android:id="@+id/action_playlistDetail_to_trackDetailsFragment"
+            android:id="@+id/action_playlistDetailFragment_to_trackDetailsFragment"
             app:destination="@id/trackDetailsFragment">
             <argument
                 android:name="trackId"
-                app:argType="long" />
+                app:argType="long"
+                android:defaultValue="0L"/>
         </action>
     </fragment>
 
+    <!-- List of quizzes -->
     <fragment
         android:id="@+id/quizListFragment"
-        android:name="com.example.musicalquizz.ui.fragments.QuizListFragment">
-        <!-- действие к деталям квиза -->
+        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizListFragment"
+        android:label="Квизы"
+        tools:layout="@layout/fragment_quiz_list">
+
+        <!-- Переход к деталям существующего квиза -->
         <action
             android:id="@+id/action_quizListFragment_to_quizDetailFragment"
             app:destination="@id/quizDetailFragment">
             <argument
                 android:name="quizId"
-                app:argType="long" />
+                app:argType="long"
+                android:defaultValue="0L"/>
         </action>
-        <!-- действие к экрану создания -->
+
+        <!-- Переход к CreateQuizFragment сразу с нужными аргументами -->
         <action
             android:id="@+id/action_quizListFragment_to_createQuizFragment"
-            app:destination="@id/createQuizFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/quizDetailFragment"
-        android:name="com.example.musicalquizz.ui.fragments.QuizDetailFragment">
-        <argument android:name="quizId" app:argType="long"/>
+            app:destination="@id/createQuizFragment">
+            <argument
+                android:name="quizId"
+                app:argType="long"
+                android:defaultValue="0L"/>
+            <argument
+                android:name="albumId"
+                app:argType="long"
+                android:defaultValue="0L"/>
+        </action>
     </fragment>
 
     <fragment
         android:id="@+id/createQuizFragment"
-        android:name="com.example.musicalquizz.ui.fragments.CreateQuizFragment" />
+        android:name="com.example.musicalquizz.ui.fragments.quiz.CreateQuizFragment"
+        android:label="Новый квиз"
+        tools:layout="@layout/fragment_create_quiz">
+        <action
+            android:id="@+id/action_createQuizFragment_to_quizListFragment"
+            app:destination="@id/quizListFragment"
+            app:popUpTo="@id/quizListFragment"
+            app:popUpToInclusive="true"/>
+        <argument
+            android:name="quizId"
+            app:argType="long"
+            android:defaultValue="0L"/>
+        <argument
+            android:name="albumId"
+            app:argType="long"
+            android:defaultValue="0L"/>
+        <!-- сюда по-прежнему может быть переход к CreateQuestionFragment -->
+        <action
+            android:id="@+id/action_createQuizFragment_to_createQuestionFragment"
+            app:destination="@id/createQuestionFragment"/>
+    </fragment>
 
+    <!-- Quiz details -->
+    <fragment
+        android:id="@+id/quizDetailFragment"
+        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizDetailsFragment"
+        android:label="Quiz details"
+        tools:layout="@layout/fragment_quiz_details">
+        <argument
+            android:name="quizId"
+            app:argType="long"
+            android:defaultValue="0L"/>
+        <action
+            android:id="@+id/action_quizDetailFragment_to_quizPlayFragment"
+            app:destination="@id/quizPlayFragment">
+            <argument android:name="quizId" app:argType="long" />
+        </action>
+    </fragment>
+
+    <!--Quiz game screen -->
+    <fragment
+        android:id="@+id/quizPlayFragment"
+        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizPlayFragment"
+        android:label="Game"
+        tools:layout="@layout/fragment_quiz_play">
+        <argument
+            android:name="quizId"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Create/Edit Question -->
+    <fragment
+        android:id="@+id/createQuestionFragment"
+        android:name="com.example.musicalquizz.ui.fragments.quiz.CreateQuestionFragment"
+        android:label="New Question"
+        tools:layout="@layout/fragment_create_question">
+
+        <argument
+            android:name="quizId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="trackId"
+            app:argType="long" />
+
+        <argument
+            android:name="questionId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="trackTitle"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="trackArtist"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="trackCoverUrl"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="trackPreviewUrl"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
 </navigation>
+
+

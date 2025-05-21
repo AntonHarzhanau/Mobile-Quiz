@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
-import com.example.musicalquizz.db.entities.PlaylistTrackEntity
+import com.example.musicalquizz.data.db.entities.PlaylistTrackEntity
 
 class PlaylistTracksAdapter(
     private val onClick: (PlaylistTrackEntity) -> Unit

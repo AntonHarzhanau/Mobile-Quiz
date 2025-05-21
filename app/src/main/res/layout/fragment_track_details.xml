@@ -31,11 +31,11 @@
         android:id="@+id/play_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="▶️ Прослушать" />
+        android:text="@string/play_btn" />
     <Button
         android:id="@+id/btnAddToPlaylist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Добавить в плейлист"
+        android:text="@string/add_to_playlist"
         android:layout_marginTop="16dp"/>
 </LinearLayout>

@@ -11,8 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
 import com.example.musicalquizz.databinding.FragmentTrackDetailsBinding
-import com.example.musicalquizz.model.Track
-import com.example.musicalquizz.network.DeezerApi
+import com.example.musicalquizz.data.model.Track
+import com.example.musicalquizz.data.network.DeezerApi
 import com.example.musicalquizz.viewmodel.PlaylistViewModel
 
 import kotlinx.coroutines.launch
