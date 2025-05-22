@@ -37,4 +37,13 @@ interface QuizDao {
     @Transaction
     @Query("SELECT * FROM quizzes WHERE id = :id")
     fun getQuizWithQuestions(id: Long): LiveData<QuizWithQuestions>
+
+    @Query("UPDATE quizzes SET questionCount = :count WHERE id = :quizId")
+    suspend fun updateQuizQuestionCount(quizId: Long, count: Int)
+
+    @Query("UPDATE quizzes SET questionCount = :count WHERE id = :quizId")
+    suspend fun updateQuestionCount(quizId: Long, count: Int)
+
+
+
 }

@@ -25,4 +25,19 @@ interface QuestionDao {
 
     @Delete
     suspend fun deleteQuestion(question: QuestionEntity)
+
+    @Query("SELECT COUNT(*) FROM questions WHERE quizId = :quizId")
+    suspend fun countQuestionsForQuiz(quizId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM questions WHERE quizId = :quizId AND trackId = :trackId")
+    suspend fun countQuestionsForQuizTrack(quizId: Long, trackId: Long): Int
+
+    @Transaction
+    @Query("""
+    SELECT * 
+      FROM questions 
+     WHERE quizId = :quizId AND trackId = :trackId 
+     LIMIT 1
+  """)
+    fun getQuestionWithAnswersOnce(quizId: Long, trackId: Long): QuestionWithAnswers?
 }

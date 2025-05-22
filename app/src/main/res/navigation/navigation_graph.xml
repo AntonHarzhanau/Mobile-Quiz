@@ -119,7 +119,6 @@
                 android:defaultValue="0L"/>
         </action>
 
-        <!-- Переход к CreateQuizFragment сразу с нужными аргументами -->
         <action
             android:id="@+id/action_quizListFragment_to_createQuizFragment"
             app:destination="@id/createQuizFragment">
@@ -178,12 +177,38 @@
     <!--Quiz game screen -->
     <fragment
         android:id="@+id/quizPlayFragment"
-        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizPlayFragment"
+        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizGameFragment"
         android:label="Game"
-        tools:layout="@layout/fragment_quiz_play">
+        tools:layout="@layout/fragment_quiz_game">
         <argument
             android:name="quizId"
             app:argType="long" />
+
+        <!-- Переход к экрану результатов -->
+        <action
+            android:id="@+id/action_quizPlayFragment_to_quizResultFragment"
+            app:destination="@id/quizResultFragment">
+            <argument
+                android:name="correctCount"
+                app:argType="integer" />
+            <argument
+                android:name="totalCount"
+                app:argType="integer" />
+        </action>
+    </fragment>
+
+    <!-- Quiz result screen -->
+    <fragment
+        android:id="@+id/quizResultFragment"
+        android:name="com.example.musicalquizz.ui.fragments.quiz.QuizResultFragment"
+        android:label="Result"
+        tools:layout="@layout/fragment_quiz_result">
+        <argument
+            android:name="correctCount"
+            app:argType="integer" />
+        <argument
+            android:name="totalCount"
+            app:argType="integer" />
     </fragment>
 
     <!-- Create/Edit Question -->

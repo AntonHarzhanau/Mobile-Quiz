@@ -32,19 +32,17 @@ class QuizListAdapter(
         private val tvTitle : TextView  = itemView.findViewById(R.id.tvQuizTitle)
         private val tvCount : TextView  = itemView.findViewById(R.id.tvQuestionCount)
 
+
         fun bind(quiz: QuizEntity) {
-            // обложка
+
             Glide.with(itemView)
                 .load(quiz.coverUri)
                 .placeholder(R.color.gray_light)
                 .into(ivCover)
-            // заголовок
+
             tvTitle.text = quiz.title
-            // количество вопросов в QuizEntity храните в поле questionCount
-            tvCount.text = itemView.context.getString(
-                R.string.question_count_format,
-                quiz.questionCount
-            )
+
+            tvCount.text = quiz.questionCount.toString()
 
             itemView.setOnClickListener   { onClick(quiz) }
             itemView.setOnLongClickListener {

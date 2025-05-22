@@ -3,7 +3,7 @@ package com.example.musicalquizz.ui.fragments.quiz
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts.GetContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -12,108 +12,104 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
 import com.example.musicalquizz.adapter.QuizTrackAdapter
+import com.example.musicalquizz.data.db.AppDatabase
+import com.example.musicalquizz.data.model.Track
 import com.example.musicalquizz.databinding.FragmentCreateQuizBinding
 import com.example.musicalquizz.viewmodel.CreateQuizViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class CreateQuizFragment : Fragment(R.layout.fragment_create_quiz) {
 
     private var _binding: FragmentCreateQuizBinding? = null
     private val binding get() = _binding!!
-
+    private val questionDao by lazy { AppDatabase.getInstance(requireContext()).questionDao() }
     private val args: CreateQuizFragmentArgs by navArgs()
+    private val vm: CreateQuizViewModel by viewModels()
 
-    private val createQuizEntry by lazy {
-        findNavController().getBackStackEntry(R.id.createQuizFragment)
-    }
-
-
-    private val viewModel: CreateQuizViewModel by viewModels({ createQuizEntry }) {
-        defaultViewModelProviderFactory
-    }
-
-
-    private val tracksAdapter = QuizTrackAdapter(
-        onClick = { track ->
-            val draft = viewModel.findDraftForTrack(track.id)
-
-            val quizId      = args.quizId
-            val trackId     = track.id
-            val questionId  = draft?.trackId ?: 0L
-            val title       = track.title
-            val artist      = track.artist.name
-            val coverUrl    = track.album.cover
-            val previewUrl  = track.preview
-
-
-            val action = CreateQuizFragmentDirections
-                .actionCreateQuizFragmentToCreateQuestionFragment(
-                    quizId         = quizId,
-                    trackId        = trackId,
-                    questionId     = questionId,
-                    trackTitle     = title,
-                    trackArtist    = artist,
-                    trackCoverUrl  = coverUrl,
-                    trackPreviewUrl= previewUrl,
-                )
-            findNavController().navigate(action)
-        },
-        onLongClick = { _, _ -> /* … */ },
-        hasQuestion = { viewModel.trackHasQuestion(it) }
-    )
-
-    private val pickImage = registerForActivityResult(GetContent()) { uri: Uri? ->
-        viewModel.setCoverUri(uri)
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        vm.coverUri.value = uri
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCreateQuizBinding.bind(view)
 
-        // Cover / Title / Desc
-        binding.btnSelectImage.setOnClickListener { pickImage.launch("image/*") }
-        viewModel.coverUri.observe(viewLifecycleOwner) { uri ->
+
+        vm.init(args.quizId)
+        vm.setPlaylistId(args.albumId)
+
+        binding.btnSelectImage.setOnClickListener {
+            pickImage.launch("image/*")
+        }
+
+        vm.coverUri.observe(viewLifecycleOwner) { uri: Uri? ->
             Glide.with(this)
                 .load(uri)
                 .placeholder(R.color.gray_light)
                 .into(binding.imgQuizPlaceholder)
         }
-        viewModel.title.observe(viewLifecycleOwner) {
-            binding.etQuizTitle.setText(it)
-        }
-        viewModel.description.observe(viewLifecycleOwner) {
-            binding.etQuizDescription.setText(it)
+
+        val adapter = QuizTrackAdapter(
+            onClick = { track ->
+
+                vm.title.value       = binding.etQuizTitle.text.toString()
+                vm.description.value = binding.etQuizDescription.text.toString()
+
+                vm.saveQuiz { quizId ->
+                    findNavController().navigate(
+                        CreateQuizFragmentDirections
+                            .actionCreateQuizFragmentToCreateQuestionFragment(
+                                quizId         = quizId,
+                                trackId        = track.id,
+                                trackTitle     = track.title,
+                                trackArtist    = track.artist.name,
+                                trackCoverUrl  = track.album.cover,
+                                trackPreviewUrl= track.preview
+                            )
+                    )
+                }
+            },
+            onLongClick = { _, _ -> },
+            hasQuestion = { trackId ->
+
+                val qid = vm.quizId.value ?: return@QuizTrackAdapter false
+                runBlocking(Dispatchers.IO) {
+                    questionDao.countQuestionsForQuizTrack(qid, trackId) > 0
+                }
+            }
+        )
+        binding.rvAlbumTracks.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvAlbumTracks.adapter    = adapter
+
+
+        vm.playlistTracks.observe(viewLifecycleOwner) { tracks: List<Track> ->
+            adapter.submitList(tracks)
         }
 
-        binding.rvAlbumTracks.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = tracksAdapter
-        }
 
-        viewModel.playlistTracks.observe(viewLifecycleOwner) { tracks ->
-            tracksAdapter.submitList(tracks)
-        }
-
-        // Save / Cancel
         binding.btnSaveQuiz.setOnClickListener {
-            viewModel.title.value       = binding.etQuizTitle.text.toString()
-            viewModel.description.value = binding.etQuizDescription.text.toString()
-            viewModel.saveAll()
-            findNavController().navigate(
-                CreateQuizFragmentDirections
-                    .actionCreateQuizFragmentToQuizListFragment()
-            )
+
+            vm.title.value       = binding.etQuizTitle.text.toString()
+            vm.description.value = binding.etQuizDescription.text.toString()
+
+            vm.saveQuiz {
+
+                findNavController().navigate(
+                    CreateQuizFragmentDirections
+                        .actionCreateQuizFragmentToQuizListFragment()
+                )
+            }
         }
+
         binding.btnCancelQuiz.setOnClickListener {
-            findNavController().navigate(
-                CreateQuizFragmentDirections
-                    .actionCreateQuizFragmentToQuizListFragment()
-            )
+            findNavController().popBackStack()
         }
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
         _binding = null
+        super.onDestroyView()
     }
 }
-

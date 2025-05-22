@@ -7,5 +7,5 @@ data class QuestionDraft(
     val trackCoverUrl: String,
     val trackPreviewUrl: String,
     var questionText: String = "",
-    val answers: MutableList<AnswerDraft> = mutableListOf()
+    var answers: MutableList<AnswerDraft> = mutableListOf()
 )

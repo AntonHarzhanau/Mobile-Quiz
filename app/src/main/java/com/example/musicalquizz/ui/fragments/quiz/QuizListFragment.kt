@@ -72,6 +72,15 @@ class QuizListFragment : Fragment(R.layout.fragment_quiz_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.rvQuizzes.apply {
+            layoutManager = GridLayoutManager(requireContext(), 2)
+            adapter = this@QuizListFragment.adapter
+        }
+
+        quizVm.quizzes.observe(viewLifecycleOwner) { quizzes ->
+            adapter.submitList(quizzes)
+        }
+
         playlistVm.playlists.observe(viewLifecycleOwner) { list ->
             playlistsCache = list
         }

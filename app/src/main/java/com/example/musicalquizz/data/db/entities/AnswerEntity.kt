@@ -22,7 +22,7 @@ import androidx.room.PrimaryKey
 data class AnswerEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val questionId: Long,
+    var questionId: Long,
     var answerText: String,
     var isCorrect: Boolean
 )

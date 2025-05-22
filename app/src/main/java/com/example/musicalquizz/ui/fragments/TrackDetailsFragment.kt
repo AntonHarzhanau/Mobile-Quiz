@@ -2,6 +2,7 @@ package com.example.musicalquizz.ui.fragments
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -58,6 +59,7 @@ class TrackDetailsFragment : Fragment() {
                 mediaPlayer?.release()
                 mediaPlayer = MediaPlayer().apply {
                     setDataSource(track.preview)
+                    Log.d("QuizGameFragment", "Playing preview: $track.preview")
                     prepare()
                     start()
                 }

@@ -1,6 +1,7 @@
 package com.example.musicalquizz.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicalquizz.data.db.AppDatabase
 import com.example.musicalquizz.data.db.entities.QuizWithQuestions
@@ -16,8 +17,9 @@ class QuizDetailsViewModel(application: Application) : AndroidViewModel(applicat
     /** Call from fragment to load data */
     fun loadQuiz(id: Long) {
         viewModelScope.launch {
-            dao.getQuizWithQuestionsOnce(id)?.let {
-                _quiz.postValue(it)
+            dao.getQuizWithQuestionsOnce(id)?.let { result ->
+                Log.d("QuizDetailsVM", "Quiz $id loaded with ${result.questions.size} questions")
+                _quiz.postValue(result)
             }
         }
     }

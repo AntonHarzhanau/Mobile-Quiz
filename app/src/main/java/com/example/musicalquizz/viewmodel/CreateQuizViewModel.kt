@@ -18,31 +18,35 @@ import com.example.musicalquizz.data.model.Album
 import com.example.musicalquizz.data.model.Artist
 import com.example.musicalquizz.data.model.QuestionDraft
 import com.example.musicalquizz.data.model.Track
+import com.example.musicalquizz.data.network.DeezerApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 
 class CreateQuizViewModel(
-    app: Application,
-    savedStateHandle: SavedStateHandle
-) : AndroidViewModel(app) {
+    application: Application,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
 
-    // SafeArgs
-    private val quizId     = savedStateHandle.get<Long>("quizId") ?: 0L
-    private val playlistId = savedStateHandle.get<Long>("albumId") ?: 0L
-
-    private val db         = AppDatabase.getInstance(app)
-    private val quizRepo   = QuizRepository(db.quizDao())
+    private val db           = AppDatabase.getInstance(application)
+    private val quizRepo     = QuizRepository(db.quizDao())
     private val questionRepo = QuestionRepository(db.questionDao())
-    private val answerRepo   = AnswerRepository(db.answerDao())
-    private val playlistRepo = PlaylistRepository(db, app)
+    private val playlistRepo = PlaylistRepository(db, application)
 
-    // UI-champs
+    // SafeArgs-backed quizId
+    private val initialQuizId = savedStateHandle.get<Long>("quizId") ?: 0L
+    private val _quizId = MutableLiveData(initialQuizId)
+    val quizId: LiveData<Long> = _quizId
+
+    // playlistId must be set from Fragment
+    private val _playlistId = MutableLiveData<Long>()
+    fun setPlaylistId(id: Long) { _playlistId.value = id }
+
+    // cover, title, description
     val coverUri    = MutableLiveData<Uri?>()
     val title       = MutableLiveData<String>()
     val description = MutableLiveData<String>()
 
-    // ——————————————————————
-    // Question drafts in memory
+    // drafts
     private val _drafts = MutableLiveData<MutableList<QuestionDraft>>(mutableListOf())
     val drafts: LiveData<List<QuestionDraft>> = _drafts as LiveData<List<QuestionDraft>>
 
@@ -50,41 +54,35 @@ class CreateQuizViewModel(
         _drafts.value?.firstOrNull { it.trackId == trackId }
 
     fun trackHasQuestion(trackId: Long): Boolean =
-        _drafts.value?.any { it.trackId == trackId } == true
+        findDraftForTrack(trackId) != null
 
-    fun addDraft(draft: QuestionDraft) {
-        _drafts.value!!.add(draft)
-        _drafts.notifyObserver()
+    fun addDraft(d: QuestionDraft) {
+        _drafts.value!!.add(d)
+        _drafts.value = _drafts.value
     }
 
-    fun updateDraft(updated: QuestionDraft) {
+    fun updateDraft(d: QuestionDraft) {
         val list = _drafts.value!!
-        val idx = list.indexOfFirst { it.trackId == updated.trackId }
+        val idx  = list.indexOfFirst { it.trackId == d.trackId }
         if (idx >= 0) {
-            list[idx] = updated
-            _drafts.notifyObserver()
+            list[idx] = d
+            _drafts.value = list
         }
     }
 
-    fun removeDraft(trackId: Long) {
-        _drafts.value!!.removeAll { it.trackId == trackId }
-        _drafts.notifyObserver()
-    }
-    // ——————————————————————
-
-    // Tracks from playlist
-    val playlistTracks: LiveData<List<Track>> =
-        playlistRepo.tracks(playlistId)
-            .map { entities ->
-                entities.map { e ->
+    // playlistTracks depends on playlistId
+    val playlistTracks: LiveData<List<Track>> = _playlistId.switchMap { pid ->
+        playlistRepo.tracks(pid)
+            .map { list ->
+                list.map { e ->
                     Track(
                         id       = e.trackId,
                         title    = e.title,
-                        artist   = Artist(name = e.artistName),
+                        artist   = Artist(e.artistName),
                         album    = Album(
                             id     = 0L,
                             title  = "",
-                            artist = Artist(name = e.artistName),
+                            artist = Artist(e.artistName),
                             cover  = e.albumCoverUrl
                         ),
                         duration = "",
@@ -93,53 +91,31 @@ class CreateQuizViewModel(
                 }
             }
             .asLiveData()
+    }
 
-    fun setCoverUri(uri: Uri?) { coverUri.value = uri }
-
-    /** Save quiz + all drafts to DB */
-    fun saveAll() = viewModelScope.launch(Dispatchers.IO) {
-
-        val quizEntity = QuizEntity(
-            id            = if (quizId != 0L) quizId else 0L,
-            title         = title.value.orEmpty(),
-            description   = description.value.orEmpty(),
-            coverUri      = coverUri.value?.toString(),
-            questionCount = _drafts.value!!.size
-        )
-
-        val newQuizId = if (quizEntity.id == 0L) {
-            quizRepo.insert(quizEntity)
-        } else {
-            quizRepo.update(quizEntity)
-            quizEntity.id
+    fun init(loadedQuizId: Long) {
+        if (_quizId.value == 0L && loadedQuizId != 0L) {
+            _quizId.value = loadedQuizId
+            savedStateHandle["quizId"] = loadedQuizId
         }
+    }
 
-        _drafts.value!!.forEach { draft ->
-            val qEnt = QuestionEntity(
-                id              = 0L,
-                quizId          = newQuizId,
-                trackId         = draft.trackId,
-                trackTitle      = draft.trackTitle,
-                trackArtist     = draft.trackArtist,
-                trackCoverUrl   = draft.trackCoverUrl,
-                trackPreviewUrl = draft.trackPreviewUrl,
-                questionText    = draft.questionText
+    fun saveQuiz(onResult: (Long) -> Unit) {
+        viewModelScope.launch {
+            val id = _quizId.value ?: 0L
+            val entity = QuizEntity(
+                id            = if (id != 0L) id else 0L,
+                title         = title.value.orEmpty(),
+                description   = description.value.orEmpty(),
+                coverUri      = coverUri.value?.toString(),
+                questionCount = _drafts.value!!.size
             )
-            val qId = questionRepo.insert(qEnt)
-            val ansEnts = draft.answers.map { ad ->
-                AnswerEntity(
-                    id         = 0L,
-                    questionId = qId,
-                    answerText = ad.answerText,
-                    isCorrect  = ad.isCorrect
-                )
-            }
-            answerRepo.insertAll(ansEnts)
+            val newId = if (id == 0L) quizRepo.insert(entity)
+            else { quizRepo.update(entity); id }
+            _quizId.postValue(newId)
+            savedStateHandle["quizId"] = newId
+            onResult(newId)
         }
     }
 }
 
-// extension LiveData<List<…>>
-private fun <T> MutableLiveData<T>.notifyObserver() {
-    this.value = this.value
-}

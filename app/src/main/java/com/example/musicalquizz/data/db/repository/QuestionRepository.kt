@@ -5,8 +5,11 @@ import com.example.musicalquizz.data.db.dao.QuestionDao
 import com.example.musicalquizz.data.db.entities.AnswerEntity
 import com.example.musicalquizz.data.db.entities.QuestionEntity
 import com.example.musicalquizz.data.db.entities.QuestionWithAnswers
+import com.example.musicalquizz.data.network.DeezerApi
 
-class QuestionRepository(private val dao: QuestionDao) {
+class QuestionRepository(
+    private val dao: QuestionDao
+) {
 
     /** All questions with answers for this quiz */
     fun getQuestionsForQuiz(quizId: Long): LiveData<List<QuestionWithAnswers>> =
@@ -27,4 +30,17 @@ class QuestionRepository(private val dao: QuestionDao) {
     /** Insert a list of answers (new or updated) */
     suspend fun insertAll(answers: List<AnswerEntity>) =
         dao.insertAnswers(answers)
+
+
+    suspend fun insertQuestion(q: QuestionEntity): Long =
+        dao.insertQuestion(q)
+
+    suspend fun insertAllAnswers(ans: List<AnswerEntity>) =
+        dao.insertAnswers(ans)
+
+    suspend fun countQuestions(quizId: Long): Int =
+        dao.countQuestionsForQuiz(quizId)
+
+    suspend fun getQuestionWithAnswersOnce(quizId: Long, trackId: Long): QuestionWithAnswers? =
+        dao.getQuestionWithAnswersOnce(quizId, trackId)
 }

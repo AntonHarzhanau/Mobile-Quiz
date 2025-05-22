@@ -35,5 +35,11 @@
     <string name="n_tracks">N tracks</string>
     <string name="menu">Menu</string>
     <string name="edit">Edit</string>
+    <string name="skip">Skip</string>
+    <string name="submit">Submit</string>
+    <string name="back_to_details">Back to details</string>
+    <string name="result_text">You answered %1$d out of %2$d questions correctly</string>
+    <string name="next">Next</string>
+    <string name="exit_quiz">Exit</string>
 
 </resources>

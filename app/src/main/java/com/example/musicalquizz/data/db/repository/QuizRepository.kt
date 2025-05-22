@@ -28,6 +28,9 @@ class QuizRepository(private val dao: QuizDao) {
     /** Delete (cascade will delete related questions too) */
     suspend fun delete(quiz: QuizEntity) =
         dao.deleteQuiz(quiz)
+
+    suspend fun updateQuestionCount(quizId: Long, count: Int) =
+        dao.updateQuestionCount(quizId, count)
 }
 
 

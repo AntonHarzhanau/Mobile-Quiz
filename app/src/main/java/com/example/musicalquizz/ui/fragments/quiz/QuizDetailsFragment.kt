@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.musicalquizz.R
@@ -39,7 +40,13 @@ class QuizDetailsFragment : Fragment(R.layout.fragment_quiz_details) {
                 .into(binding.imgDetailsCover)
 
             binding.btnStartQuiz.setOnClickListener {
-                // TODO: navigation to the game screen (if there is one)
+                findNavController().navigate(
+                    QuizDetailsFragmentDirections.
+                    actionQuizDetailFragmentToQuizPlayFragment(
+                        quizId = args.quizId
+                    )
+
+                )
             }
         }
     }
