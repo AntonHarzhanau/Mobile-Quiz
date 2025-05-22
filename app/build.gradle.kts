@@ -107,4 +107,6 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
+    implementation("com.google.android.material:material:1.10.0")
+
 }

@@ -1,118 +1,183 @@
 package com.example.musicalquizz.viewmodel
 
-import android.util.Log
+import android.app.Application
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.os.Bundle
+import androidx.core.net.toUri
 import androidx.lifecycle.*
+import androidx.savedstate.SavedStateRegistryOwner
 import com.example.musicalquizz.data.db.entities.AnswerEntity
 import com.example.musicalquizz.data.db.entities.QuestionWithAnswers
 import com.example.musicalquizz.data.db.repository.QuestionRepository
 import com.example.musicalquizz.data.network.DeezerApi
-
 import kotlinx.coroutines.launch
 
-class QuizGameViewModel(
-    private val questionRepo: QuestionRepository,
-    private val quizId: Long
-) : ViewModel() {
 
-    // 1) Вся пара (вопрос+ответы)
+class QuizGameViewModel(
+    application: Application,
+    private val questionRepo: QuestionRepository,
+    private val quizId: Long,
+    private val state: SavedStateHandle
+) : AndroidViewModel(application) {
 
     private val qaList: LiveData<List<QuestionWithAnswers>> =
-        questionRepo.getQuestionsForQuiz(quizId).also { live ->
-            live.observeForever { list ->
-                Log.d("QuizGameVM", "Loaded questions for quiz $quizId: count = ${list.size}")
-            }
-        }
-    // 2) Текущий индекс
-    private val _currentIndex = MutableLiveData(0)
+        questionRepo.getQuestionsForQuiz(quizId)
+
+
+    private val _currentIndex = state.getLiveData("currentIndex", 0)
     val currentIndex: LiveData<Int> = _currentIndex
 
-    // 3) Выбранные ответы
-    private val _selectedAnswers = MutableLiveData<Set<Long>>(emptySet())
+    private val _selectedAnswers = state.getLiveData("selectedAnswers", emptySet<Long>())
     val selectedAnswers: LiveData<Set<Long>> = _selectedAnswers
 
-    // 4) Флаг отправки
-    private val _isSubmitted = MutableLiveData(false)
+
+    private val _isSubmitted = state.getLiveData("isSubmitted", false)
     val isSubmitted: LiveData<Boolean> = _isSubmitted
 
-    // 5) Счёт правильных
-    private var score = 0
-    val correctCount: Int get() = score
-    val totalCount: Int get() = qaList.value?.size ?: 0
 
-    // 6) LiveData текущего вопроса
+    private var score = state.get<Int>("score") ?: 0
+    val correctCount: Int get() = score
+    val totalCount: Int   get() = qaList.value?.size ?: 0
+
     val currentQA: LiveData<QuestionWithAnswers?> = MediatorLiveData<QuestionWithAnswers?>().apply {
         fun refresh() {
             val list = qaList.value
-            val idx = _currentIndex.value ?: 0
+            val idx  = _currentIndex.value ?: 0
             value = list?.getOrNull(idx)
         }
-        addSource(qaList) { refresh() }
+        addSource(qaList)        { refresh() }
         addSource(_currentIndex) { refresh() }
     }
 
-    // 7) Список ответов для UI
     val currentAnswers: LiveData<List<AnswerEntity>> =
         currentQA.map { it?.answers.orEmpty() }
 
-    // 8) LiveData для свежей ссылки preview
-    private val _previewUrl = MutableLiveData<String?>()
-    val previewUrl: LiveData<String?> = _previewUrl
 
-    /** Запрашивает свежий preview URL по trackId */
-    fun loadPreview(trackId: Long) {
-        viewModelScope.launch {
-            try {
-                val url = DeezerApi.retrofitService.getTrackById(trackId).preview
-                _previewUrl.value = url
-            } catch (e: Exception) {
-                _previewUrl.value = null
+    private val app = getApplication<Application>()
+    private var currentTrackId: Long? = null
+
+    val player: MediaPlayer = MediaPlayer().apply {
+        setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build()
+        )
+    }
+
+    private val _isPlaying = MutableLiveData(false)
+    val isPlaying: LiveData<Boolean> = _isPlaying
+
+    fun togglePlay() {
+        val qa = currentQA.value ?: return
+        val tid = qa.question.trackId
+
+        when {
+            player.isPlaying -> {
+                player.pause()
+                _isPlaying.value = false
+            }
+            currentTrackId == tid && player.currentPosition > 0 -> {
+                player.start()
+                _isPlaying.value = true
+            }
+            else -> {
+                viewModelScope.launch {
+                    try {
+                        val url = DeezerApi.retrofitService.getTrackById(tid).preview
+                        url.let {
+                            currentTrackId = tid
+                            player.reset()
+                            player.setDataSource(app, it.toUri())
+                            player.setOnPreparedListener {
+                                it.start()
+                                _isPlaying.value = true
+                            }
+                            player.setOnCompletionListener {
+                                it.seekTo(0)
+                                _isPlaying.value = false
+                            }
+                            player.prepareAsync()
+                        }
+                    } catch (_: Exception) { /* ignore */ }
+                }
             }
         }
     }
 
-    /** Отметить/снять ответ */
-    fun toggleAnswer(answerId: Long, checked: Boolean) {
-        if (_isSubmitted.value == true) return
-        _selectedAnswers.value = _selectedAnswers.value!!
-            .toMutableSet()
-            .apply { if (checked) add(answerId) else remove(answerId) }
+
+    fun resetPlayer() {
+        if (player.isPlaying) player.pause()
+        player.seekTo(0)
+        _isPlaying.value = false
+        currentTrackId = null
     }
 
-    /** Проверить ответ, обновить score и флаг отправки */
+
+    fun toggleAnswer(answerId: Long, checked: Boolean) {
+        if (_isSubmitted.value == true) return
+        val answers   = currentQA.value?.answers.orEmpty()
+        val multiMode = answers.count { it.isCorrect } > 1
+        val updated = if (!multiMode && checked) {
+            setOf(answerId)
+        } else {
+            _selectedAnswers.value!!.toMutableSet().apply {
+                if (checked) add(answerId) else remove(answerId)
+            }
+        }
+        _selectedAnswers.value = updated
+        state["selectedAnswers"] = updated
+    }
+
+    /** Submit */
     fun submit(): Boolean {
         val qa = currentQA.value ?: return false
         val correctIds = qa.answers.filter { it.isCorrect }.map { it.id }.toSet()
-        val isCorrect = correctIds == _selectedAnswers.value
-        if (isCorrect) score++
+        val ok = correctIds == _selectedAnswers.value
+        if (ok) {
+            score++
+            state["score"] = score
+        }
         _isSubmitted.value = true
-        return isCorrect
+        state["isSubmitted"] = true
+        return ok
     }
 
-    /** Пропустить — просто next() */
-    fun skip(): Boolean = next()
+    /** Skip / Next */
 
-    /** Перейти к следующему вопросу, сбросив выбор и флаг */
-    fun next(): Boolean {
-        val next = (_currentIndex.value ?: 0) + 1
-        return if (qaList.value != null && next < qaList.value!!.size) {
-            _currentIndex.value = next
-            _selectedAnswers.value = emptySet()
-            _isSubmitted.value = false
+    fun skip(): Boolean {
+
+        _selectedAnswers.value = emptySet()
+        state.set<Set<Long>>("selectedAnswers", emptySet())
+
+        _isSubmitted.value = false
+        state["isSubmitted"] = false
+
+        val nextIdx = (_currentIndex.value ?: 0) + 1
+        return if (qaList.value != null && nextIdx < qaList.value!!.size) {
+            _currentIndex.value = nextIdx
+            state["currentIndex"] = nextIdx
             true
-        } else false
+        } else {
+            false
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        player.release()
     }
 }
 
 class QuizGameViewModelFactory(
+    private val application: Application,
     private val questionRepo: QuestionRepository,
-    private val quizId: Long
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(QuizGameViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return QuizGameViewModel(questionRepo, quizId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
-    }
+    private val quizId: Long,
+    owner: SavedStateRegistryOwner,
+    defaultArgs: Bundle? = null
+) : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
+    override fun <T : ViewModel> create(
+        key: String, modelClass: Class<T>, handle: SavedStateHandle
+    ): T = QuizGameViewModel(application, questionRepo, quizId, handle) as T
 }
-

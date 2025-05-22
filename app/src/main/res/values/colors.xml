@@ -5,4 +5,7 @@
     <color name="gray">#888888</color>
     <color name="gray_light">#C3C3C3</color>
     <color name="green">#239A1F</color>
+    <color name="colorCorrect">#5CE74E</color>
+    <color name="colorIncorrect">#BD1708</color>
+    <color name="colorOnSurface">#006B504D</color>
 </resources>

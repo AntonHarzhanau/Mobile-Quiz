@@ -5,7 +5,6 @@ import com.example.musicalquizz.data.db.dao.QuestionDao
 import com.example.musicalquizz.data.db.entities.AnswerEntity
 import com.example.musicalquizz.data.db.entities.QuestionEntity
 import com.example.musicalquizz.data.db.entities.QuestionWithAnswers
-import com.example.musicalquizz.data.network.DeezerApi
 
 class QuestionRepository(
     private val dao: QuestionDao

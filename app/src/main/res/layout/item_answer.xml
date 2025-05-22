@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.MaterialComponents.CardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:layout_marginBottom="8dp">
+
+    <!-- В режиме одиночного выбора это будет заменено на RadioButton -->
+<CheckBox
+android:id="@+id/chk_answer"
+style="@style/Widget.MaterialComponents.CompoundButton.RadioButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:buttonTint="@color/selector_answer_button" />
+
+<TextView
+android:id="@+id/tv_answer_text"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_marginStart="16dp"
+android:layout_weight="1"
+android:textAppearance="?attr/textAppearanceBody1" />
+
+    </LinearLayout>

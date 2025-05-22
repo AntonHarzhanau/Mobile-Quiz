@@ -1,174 +1,124 @@
 package com.example.musicalquizz.ui.fragments.quiz
 
-import android.graphics.Color
-import android.media.AudioAttributes
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.*
-import androidx.core.view.children
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.musicalquizz.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.musicalquizz.adapter.AnswerAdapter
 import com.example.musicalquizz.data.db.AppDatabase
+import com.example.musicalquizz.data.db.repository.QuestionRepository
 import com.example.musicalquizz.viewmodel.QuizGameViewModel
 import com.example.musicalquizz.viewmodel.QuizGameViewModelFactory
-import com.example.musicalquizz.data.db.entities.AnswerEntity
-import com.example.musicalquizz.data.db.repository.QuestionRepository
-import com.example.musicalquizz.data.network.DeezerApi
-import androidx.core.net.toUri
-
+import com.example.musicalquizz.R
 
 class QuizGameFragment : Fragment(R.layout.fragment_quiz_game) {
 
-    private val args: QuizGameFragmentArgs by navArgs()
+    private val args by navArgs<QuizGameFragmentArgs>()
     private val vm: QuizGameViewModel by viewModels {
-        val dao = AppDatabase.getInstance(requireContext()).questionDao()
-        val api = DeezerApi
         QuizGameViewModelFactory(
-            QuestionRepository(dao),
-            args.quizId
+            application   = requireActivity().application,
+            questionRepo  = QuestionRepository(
+                AppDatabase.getInstance(requireContext()).questionDao()
+            ),
+            quizId        = args.quizId,
+            owner         = this,
+            defaultArgs   = arguments
         )
     }
-
-    private var player: MediaPlayer? = null
 
     private lateinit var exitBtn: ImageButton
     private lateinit var playBtn: ImageButton
     private lateinit var questionTv: TextView
-    private lateinit var answersContainer: LinearLayout
+    private lateinit var rvAnswers: RecyclerView
     private lateinit var skipNextBtn: Button
     private lateinit var submitBtn: Button
+    private lateinit var adapter: AnswerAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        exitBtn = view.findViewById(R.id.btn_exit)
-        playBtn = view.findViewById(R.id.btn_play_preview)
-        questionTv = view.findViewById(R.id.tv_question)
-        answersContainer = view.findViewById(R.id.answers_container)
+        exitBtn     = view.findViewById(R.id.btn_exit)
+        playBtn     = view.findViewById(R.id.btn_play_preview)
+        questionTv  = view.findViewById(R.id.tv_question)
+        rvAnswers   = view.findViewById(R.id.rv_answers)
         skipNextBtn = view.findViewById(R.id.btn_skip_next)
-        submitBtn = view.findViewById(R.id.btn_submit)
+        submitBtn   = view.findViewById(R.id.btn_submit)
 
-        player = MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build()
-            )
+        exitBtn.setOnClickListener { findNavController().popBackStack() }
+
+        // RecyclerView + Adapter
+        rvAnswers.layoutManager = LinearLayoutManager(requireContext())
+        adapter = AnswerAdapter(isMulti = false) { id, checked ->
+            vm.toggleAnswer(id, checked)
+        }
+        rvAnswers.adapter = adapter
+
+
+        vm.isSubmitted.observe(viewLifecycleOwner) { submitted ->
+            if (submitted) {
+                adapter.markSubmitted()
+                submitBtn.isEnabled = false
+                skipNextBtn.text    = getString(R.string.next)
+            } else {
+                skipNextBtn.text    = getString(R.string.skip)
+            }
         }
 
-        // Exit
-        exitBtn.setOnClickListener { findNavController().popBackStack() }
+        // Submit – enabled по selectedAnswers
+        vm.selectedAnswers.observe(viewLifecycleOwner) { sel ->
+            submitBtn.isEnabled = sel.isNotEmpty() && vm.isSubmitted.value == false
+        }
+        submitBtn.setOnClickListener {
+            vm.submit()
+            adapter.markSubmitted()
+        }
 
 
         vm.currentQA.observe(viewLifecycleOwner) { qa ->
             qa ?: return@observe
-            questionTv.text = qa.question.questionText
-            renderAnswers(qa.answers)
-            submitBtn.isEnabled = false
-            skipNextBtn.text = getString(R.string.skip)
-        }
+            questionTv.text  = qa.question.questionText
 
-        vm.previewUrl.observe(viewLifecycleOwner) { url ->
-            url ?: return@observe
-            player?.reset()
-            player?.setDataSource(requireContext(), url.toUri())
-            player?.setOnPreparedListener { it.start() }
-            player?.setOnErrorListener { _, what, _ ->
-                Toast.makeText(requireContext(),
-                    "Play error: $what", Toast.LENGTH_SHORT).show()
-                true
+            val multi    = qa.answers.count { it.isCorrect } > 1
+            val selected = vm.selectedAnswers.value ?: emptySet()
+
+            adapter.submitList(qa.answers, multi, selected)
+
+            if (vm.isSubmitted.value == true) {
+                adapter.markSubmitted()
             }
-            player?.prepareAsync()
+
+            playBtn.setImageResource(android.R.drawable.ic_media_play)
         }
 
+        vm.isPlaying.observe(viewLifecycleOwner) { playing ->
+            playBtn.setImageResource(
+                if (playing) android.R.drawable.ic_media_pause
+                else           android.R.drawable.ic_media_play
+            )
+        }
         playBtn.setOnClickListener {
-            vm.currentQA.value?.question?.trackId?.let { tid ->
-                vm.loadPreview(tid)
-            }
+            vm.togglePlay()
         }
 
-        // Skip / Next
         skipNextBtn.setOnClickListener {
+            vm.resetPlayer()
             if (!vm.skip()) {
                 findNavController().navigate(
                     QuizGameFragmentDirections
                         .actionQuizPlayFragmentToQuizResultFragment(
                             correctCount = vm.correctCount,
-                            totalCount = vm.totalCount
+                            totalCount   = vm.totalCount,
+                            quizId       = args.quizId
                         )
                 )
             }
         }
-
-        // Submit
-        submitBtn.setOnClickListener {
-            vm.submit()
-            highlightAnswers()
-            submitBtn.isEnabled = false
-            skipNextBtn.text = getString(R.string.next)
-        }
-    }
-
-    private fun renderAnswers(answers: List<AnswerEntity>) {
-        answersContainer.removeAllViews()
-        val multiple = answers.count { it.isCorrect } > 1
-
-        if (multiple) {
-            answers.forEach { ans ->
-                CheckBox(requireContext()).apply {
-                    text = ans.answerText
-                    setOnCheckedChangeListener { _, checked ->
-                        vm.toggleAnswer(ans.id, checked)
-                        submitBtn.isEnabled = vm.selectedAnswers.value!!.isNotEmpty()
-                    }
-                    answersContainer.addView(this)
-                }
-            }
-        } else {
-            val rg = RadioGroup(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-            }
-            answers.forEach { ans ->
-                RadioButton(requireContext()).apply {
-                    text = ans.answerText
-                    id = View.generateViewId()
-                    rg.addView(this)
-                }
-            }
-            rg.setOnCheckedChangeListener { _, checkedId ->
-                val idx = rg.indexOfChild(rg.findViewById(checkedId))
-                vm.toggleAnswer(answers[idx].id, true)
-                submitBtn.isEnabled = true
-            }
-            answersContainer.addView(rg)
-        }
-    }
-
-    private fun highlightAnswers() {
-        vm.currentAnswers.value?.let { answers ->
-            answersContainer.children.forEachIndexed { idx, view ->
-                val ans = answers[idx]
-                val color = when {
-                    ans.isCorrect -> Color.GREEN
-                    vm.selectedAnswers.value!!.contains(ans.id) -> Color.RED
-                    else -> Color.TRANSPARENT
-                }
-                view.setBackgroundColor(color)
-            }
-        }
-    }
-
-    override fun onDestroyView() {
-        player?.release()
-        player = null
-        super.onDestroyView()
     }
 }
-
-

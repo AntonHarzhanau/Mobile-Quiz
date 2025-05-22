@@ -24,7 +24,13 @@ class QuizResultFragment : Fragment(R.layout.fragment_quiz_result) {
         )
 
         back.setOnClickListener {
-            findNavController().popBackStack()
+            findNavController().navigate(
+            QuizResultFragmentDirections
+                .actionQuizResultFragmentToQuizDetailFragment(
+                    args.quizId
+                )
+            )
+
         }
     }
 }

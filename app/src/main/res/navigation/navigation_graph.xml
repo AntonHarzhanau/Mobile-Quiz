@@ -209,6 +209,12 @@
         <argument
             android:name="totalCount"
             app:argType="integer" />
+        <argument
+            android:name="quizId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_quizResultFragment_to_quizDetailFragment"
+            app:destination="@+id/quizDetailFragment"/>
     </fragment>
 
     <!-- Create/Edit Question -->
