@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/mainhome"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:divider="?android:attr/dividerHorizontal"
+        android:dividerPadding="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:showDividers="middle">
+
+        <!-- Barre du haut -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginBottom="25dp"
+            android:background="@color/backgroundDark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Icône de recherche -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start|center_vertical">
+
+                <ImageView
+                    android:id="@+id/icon_search"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="Recherche"
+                    android:src="@drawable/ic_search"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
+
+            <!-- Logo au centre -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/logo_spotify"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="Spotify Logo"
+                    />
+
+                <TextView
+                    android:id="@+id/text_spotify"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Deezer Music"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Icône paramètres -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end|center_vertical">
+
+                <ImageView
+                    android:id="@+id/icon_settings"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="Paramètres"
+                    android:src="@drawable/ic_settings"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Banner Slider -->
+        <FrameLayout
+            android:id="@+id/banner_slider"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:clipToOutline="true"
+            android:background="@drawable/rounded_background">
+
+
+            <!-- Image centrale (grande et centrée) -->
+            <ImageView
+                android:id="@+id/bannerImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop"
+                android:src="@drawable/music_back" />
+
+
+            <!-- Flèche gauche -->
+            <ImageView
+                android:id="@+id/btnLeft"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Précédent"
+                android:padding="4dp"
+                android:src="@drawable/baseline_arrow_back_ios_24"
+                app:tint="@android:color/white" />
+
+            <!-- Flèche droite -->
+            <ImageView
+                android:id="@+id/btnRight"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Suivant"
+                android:padding="4dp"
+                android:src="@drawable/baseline_arrow_forward_ios_24"
+                app:tint="@android:color/white" />
+
+            <!-- Texte en bas -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:color="@color/white"
+                android:background="#80000000"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/bannerTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Titre de l'album"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/bannerSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Artiste / Détail"
+                    android:textColor="#DDDDDD"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@color/dark_background">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Top hits "
+                android:textColor="@android:color/white"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/track_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                android:background="@color/dark_background"
+                tools:itemCount="30"
+                tools:listitem="@layout/item_tracks_album" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+</ScrollView>

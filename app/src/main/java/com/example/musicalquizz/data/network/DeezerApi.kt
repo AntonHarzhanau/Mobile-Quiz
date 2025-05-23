@@ -1,5 +1,6 @@
 package com.example.musicalquizz.data.network
 
+import com.example.musicalquizz.data.model.ChartResponse
 import com.example.musicalquizz.data.model.Track
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -20,6 +21,11 @@ interface DeezerService {
 
     @GET("album/{id}")
     suspend fun getAlbumById(@Path("id") id: Long): AlbumWithTracks
+
+
+    @GET("chart")
+    suspend fun getTopCharts(): ChartResponse
+
 }
 
 object DeezerApi {

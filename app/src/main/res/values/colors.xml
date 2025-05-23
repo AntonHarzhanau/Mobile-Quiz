@@ -5,7 +5,39 @@
     <color name="gray">#888888</color>
     <color name="gray_light">#C3C3C3</color>
     <color name="green">#239A1F</color>
+
+
+    <!-- Couleurs principales -->
+    <color name="backgroundDark">#121212</color> <!-- Fond sombre -->
+    <color name="textPrimary">#FFFFFF</color> <!-- Texte principal en blanc -->
+    <color name="textSecondary">#bdbdbd</color> <!-- Texte principal en blanc -->
+
+    <!-- Couleurs des boutons et interactions -->
+    <color name="buttonPrimary">#241933</color>
+    <color name="buttonSecondary">#6b4997</color>
+
+    <!-- Couleurs des icônes -->
+    <color name="iconActive">#533875</color> <!-- Icônes actives -->
+    <color name="iconInactive">#A9A9A9</color> <!-- Icônes inactives en gris clair -->
+
+
+    <!-- Couleurs des cartes et éléments interactifs -->
+    <color name="cardBackground">#1A1A1A</color> <!-- Fond des cartes -->
+    <color name="card">#333333</color>
+    <color name="navigation_color">#282828</color>
+
+
+    <color name="dark_background">#121212</color>
+    <color name="search_bar_bg">#282828</color>
+    <color name="text_gray">#BDBDBD</color>
+    <color name="purple_primary">#673AB7</color>
+    <color name="purple_button">#7851A9</color>
+    <color name="transparent">#00000000</color>
+    <color name="blue">#0080ff</color>
+
     <color name="colorCorrect">#5CE74E</color>
     <color name="colorIncorrect">#BD1708</color>
     <color name="colorOnSurface">#006B504D</color>
+
+
 </resources>
