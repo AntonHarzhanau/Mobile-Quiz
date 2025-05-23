@@ -10,10 +10,7 @@ L'application **MusicalQuiz** offre les fonctionnalités suivantes :
 - **Consultation des détails** sur les pistes et les albums, avec lecture d'extraits musicaux courts.
 - **Création et gestion des playlists** avec possibilité d'ajouter des pistes.
 - **Création et réalisation de quiz** basés sur les playlists personnelles.
-
-### Captures d'écran de l'application :
-# _(Ajoutez ici  captures d'écran)_
-
+### Captures d'écran de l'application : dans dossier screenshots
 ---
 
 ## 2. Architecture technique
@@ -31,7 +28,7 @@ MusicalQuiz (MVVM)
 │   ├── TrackDetailsFragment
 │   ├── PlayListFragment, CreatePlayListFragment, PlaylistDetailFragment
 │   └── QuizListFragment, CreateQuizFragment, CreateQuestionFragment,
-│       QuizDetailsFragment, QuizGameFragment, QuizResultFragment
+│       QuizDetailsFragment, QuizGameFragment, QuizResultFragment,HomeFragment
 │
 ├── Couche ViewModel
 │   ├── SearchViewModel
@@ -57,12 +54,10 @@ MusicalQuiz (MVVM)
 
 ## 3. Problèmes techniques non résolus
 - Comportement incorrect du MediaPlayer lors de la rotation de l'écran (erreurs d'état).
-- Problèmes de sauvegarde de l'état du quiz lors de la rotation de l'écran.
 - Implémentation inachevée de la sélection d'images depuis la galerie.
 - Absence de mise en cache du contenu multimédia (images et audio).
 - Absence d'un véritable mode hors ligne.
-
-# à completer!!!!!!!!!!!!
+- pour le homePage, navigation et actions de sbouttons
 ---
 
 ## Contribution des participants
@@ -75,13 +70,7 @@ MusicalQuiz (MVVM)
 - Intégration du lecteur multimédia (MediaPlayer)
 
 **Adamah Olivia** :
-- Design et réalisation de l'interface utilisateur (Fragments, RecyclerView, adaptateurs)
+- Design et réalisation de l'interface utilisateur (Fragments, RecyclerView, adaptateurs, Layout)
 - Implémentation de la navigation et interactions utilisateur
+- Récupération des "Top Hits du moment" :Appele  d'un point de terminaison spécifique de l'API Deezer (chart pour pour obtenir une liste des chansons les plus populaires et tendance du moment). 
 - Tests et débogage de l'application
-# à completer!!!!!!!!!!!!
----
-
-**Statut du projet** : Achevé, nécessite un approfondissement des problèmes identifiés.
-
-# à completer!!!!!!!!!!!!
-
