@@ -87,12 +87,22 @@ class CreateQuizFragment : Fragment(R.layout.fragment_create_quiz) {
             if (done) {
                 if (args.quizId == 0L) {
                     vm.clearDrafts()
+                    vm.clearCover()
                 }
                 findNavController().popBackStack()
                 vm.clearSaveDone()
             }
         }
-        b.btnCancelQuiz.setOnClickListener { findNavController().popBackStack() }
+        b.btnCancelQuiz.setOnClickListener {
+
+            if (args.quizId == 0L) {
+                vm.clearDrafts()
+                vm.clearCover()
+            }
+            findNavController().popBackStack()
+            vm.clearSaveDone()
+
+        }
     }
 
     override fun onDestroyView() {

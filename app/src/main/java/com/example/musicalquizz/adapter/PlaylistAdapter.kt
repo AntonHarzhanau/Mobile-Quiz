@@ -35,7 +35,6 @@ class PlaylistsAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val pl = getItem(position)  // <- PlaylistEntity
         holder.tvTitle.text = pl.title
-        // TODO: tvCount can be filled with a DAO query (number of tracks) or stored in another table
         holder.tvCount.text = ""
         Glide.with(holder.itemView)
             .load(pl.coverUri ?: R.drawable.ic_playlist_placeholder)

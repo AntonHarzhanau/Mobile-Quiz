@@ -1,9 +1,12 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.navigationSafeArgs)
+
 }
+
 
 android {
     namespace = "com.example.musicalquizz"

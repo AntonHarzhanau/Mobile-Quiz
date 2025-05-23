@@ -87,6 +87,9 @@ class CreateQuizViewModel(
     fun clearDrafts() {
         _drafts.value = mutableListOf()
     }
+    fun clearCover() {
+        coverUri.value = null
+    }
 
     fun trackHasQuestion(trackId: Long): Boolean =
         _drafts.value?.any { it.trackId == trackId } == true
