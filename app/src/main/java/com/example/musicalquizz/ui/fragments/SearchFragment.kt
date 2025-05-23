@@ -3,10 +3,12 @@ package com.example.musicalquizz.ui.fragments
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.musicalquizz.R
 import com.example.musicalquizz.adapter.SearchAdapter
 import com.example.musicalquizz.databinding.FragmentSearchBinding
 import com.example.musicalquizz.viewmodel.SearchViewModel
@@ -20,6 +22,7 @@ class SearchFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: SearchAdapter
     private var isAlbumMode = false
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
         FragmentSearchBinding.inflate(inflater, container, false).also { _binding = it }.root
@@ -53,6 +56,12 @@ class SearchFragment : Fragment() {
                 override fun onTabUnselected(tab: TabLayout.Tab) {}
                 override fun onTabReselected(tab: TabLayout.Tab) {}
             })
+
+            setTabTextColors(
+                ContextCompat.getColor(context, R.color.gray),
+                ContextCompat.getColor(context, R.color.white)
+            )
+            setSelectedTabIndicatorColor(ContextCompat.getColor(context, R.color.white))
         }
 
 

@@ -16,14 +16,14 @@ class AlbumAdapter(private var albums: List<Album>) :
     RecyclerView.Adapter<AlbumAdapter.AlbumViewHolder>() {
 
     inner class AlbumViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val albumCover: ImageView = itemView.findViewById(R.id.albumCover)
-        val albumTitle: TextView = itemView.findViewById(R.id.albumTitle)
-        val artistName: TextView = itemView.findViewById(R.id.artist)
+        val albumCover: ImageView = itemView.findViewById(R.id.album_cover)
+        val albumTitle: TextView = itemView.findViewById(R.id.track_title)
+        val artistName: TextView = itemView.findViewById(R.id.track_artist)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_tops_hits, parent, false)
+            .inflate(R.layout.item_tracks_album, parent, false)
         return AlbumViewHolder(view)
     }
 
@@ -45,6 +45,7 @@ class AlbumAdapter(private var albums: List<Album>) :
         notifyDataSetChanged()
     }
 }
+
 
 
 
