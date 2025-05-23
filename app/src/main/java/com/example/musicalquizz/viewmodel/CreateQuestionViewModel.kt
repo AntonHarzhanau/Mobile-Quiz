@@ -1,121 +1,143 @@
 package com.example.musicalquizz.viewmodel
 
-import android.app.Application
+import android.content.Context
+import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.os.Bundle
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
-import androidx.lifecycle.AndroidViewModel
+import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
-import androidx.savedstate.SavedStateRegistryOwner
-import com.example.musicalquizz.data.db.AppDatabase
 import com.example.musicalquizz.data.model.AnswerDraft
 import com.example.musicalquizz.data.model.QuestionDraft
-import kotlinx.coroutines.Dispatchers
+import com.example.musicalquizz.data.network.DeezerApi
 import kotlinx.coroutines.launch
+
 
 class CreateQuestionViewModel(
     private val parentVm: CreateQuizViewModel,
     handle: SavedStateHandle
-) : AndroidViewModel(parentVm.getApplication<Application>()) {
+) : ViewModel() {
 
-    // NavArgs
-    private val quizId         = handle.get<Long>("quizId")!!
-    private val trackId        = handle.get<Long>("trackId")!!
-    private val trackTitle     = handle.get<String>("trackTitle")!!
-    private val trackArtist    = handle.get<String>("trackArtist")!!
-    private val trackCoverUrl  = handle.get<String>("trackCoverUrl")!!
-    private val trackPreviewUrl= handle.get<String>("trackPreviewUrl")!!
+    private val trackId         = handle.get<Long>("trackId")!!
+    private val trackTitle      = handle.get<String>("trackTitle")!!
+    private val trackArtist     = handle.get<String>("trackArtist")!!
+    private val trackCoverUrl   = handle.get<String>("trackCoverUrl")!!
+    private val trackPreviewUrl = handle.get<String>("trackPreviewUrl")!!
 
-    // DAO for loading existing question
-    private val questionDao = AppDatabase.getInstance(getApplication()).questionDao()
+    private val existingDraft = parentVm.drafts.value
+        ?.firstOrNull { it.trackId == trackId }
 
-    // In-memory draft if already added in this session
-    private val existingDraft: QuestionDraft? =
-        parentVm.drafts.value?.firstOrNull { it.trackId == trackId }
+    private val _draft = MutableLiveData<QuestionDraft>().apply {
+        value = existingDraft ?: QuestionDraft(
+            trackId        = trackId,
+            trackTitle     = trackTitle,
+            trackArtist    = trackArtist,
+            trackCoverUrl  = trackCoverUrl,
+            trackPreviewUrl= trackPreviewUrl
+        )
+    }
 
-    // Backing LiveData for the draft
-    private val _draft = MutableLiveData<QuestionDraft>()
     val draft: LiveData<QuestionDraft> = _draft
 
-    // UI fields
-    val questionText = MutableLiveData<String>()
-    val answers      = MutableLiveData<List<AnswerDraft>>()
+    val questionText = MutableLiveData<String>().apply {
+        value = existingDraft?.questionText.orEmpty()
+    }
 
-    init {
-        if (existingDraft != null) {
-            // Use in-memory draft
-            _draft.value     = existingDraft
-            questionText.value = existingDraft.questionText
-            answers.value      = existingDraft.answers.toList()
-        } else {
-            // Create a fresh draft, then attempt to load from DB
-            val newDraft = QuestionDraft(
-                trackId        = trackId,
-                trackTitle     = trackTitle,
-                trackArtist    = trackArtist,
-                trackCoverUrl  = trackCoverUrl,
-                trackPreviewUrl= trackPreviewUrl
-            )
-            _draft.value = newDraft
-            questionText.value = newDraft.questionText
-            answers.value      = newDraft.answers.toList()
+    private val _answers = MutableLiveData<List<AnswerDraft>>().apply {
+        value = existingDraft?.answers?.toList() ?: emptyList()
+    }
 
-            // Load existing saved question from DB, if any
-            viewModelScope.launch(Dispatchers.IO) {
-                val qwa = questionDao.getQuestionWithAnswersOnce(quizId, trackId)
-                if (qwa != null) {
-                    val loaded = QuestionDraft(
-                        trackId        = qwa.question.trackId,
-                        trackTitle     = qwa.question.trackTitle,
-                        trackArtist    = qwa.question.trackArtist,
-                        trackCoverUrl  = qwa.question.trackCoverUrl,
-                        trackPreviewUrl= qwa.question.trackPreviewUrl,
-                        questionText   = qwa.question.questionText,
-                        answers        = qwa.answers.map { ans ->
-                            AnswerDraft(
-                                id         = ans.id,
-                                questionId = ans.questionId,
-                                answerText = ans.answerText,
-                                isCorrect  = ans.isCorrect
-                            )
-                        }.toMutableList()
-                    )
-                    _draft.postValue(loaded)
-                    questionText.postValue(loaded.questionText)
-                    answers.postValue(loaded.answers.toList())
+    val answers: LiveData<List<AnswerDraft>> = _answers
+
+    fun addAnswer() {
+        val list = _answers.value!!.toMutableList()
+        list.add(AnswerDraft())
+        _answers.value = list
+    }
+
+    fun updateAnswer(updated: AnswerDraft) {
+        val list = _answers.value!!.toMutableList()
+        val idx = list.indexOfFirst { it.id == updated.id }
+        if (idx >= 0) {
+            list[idx] = updated
+            _answers.value = list
+        }
+    }
+
+
+    fun saveDraft() {
+        val d = QuestionDraft(
+            trackId        = trackId,
+            trackTitle     = trackTitle,
+            trackArtist    = trackArtist,
+            trackCoverUrl  = trackCoverUrl,
+            trackPreviewUrl= trackPreviewUrl,
+            questionText   = questionText.value.orEmpty(),
+            answers        = _answers.value!!.toMutableList()
+        )
+        if (parentVm.trackHasQuestion(trackId)) parentVm.updateDraft(d)
+        else parentVm.addDraft(d)
+    }
+
+
+    private var currentTrackId: Long? = null
+    private val _isPlaying = MutableLiveData(false)
+    val isPlaying: LiveData<Boolean> = _isPlaying
+
+    var player: MediaPlayer = MediaPlayer().apply {
+        setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build()
+        )
+    }
+
+    fun togglePlay(context: Context) {
+        when {
+            player.isPlaying -> {
+                player.pause()
+                _isPlaying.value = false
+            }
+            currentTrackId == trackId && player.currentPosition > 0 -> {
+                player.start()
+                _isPlaying.value = true
+            }
+            else -> {
+                viewModelScope.launch {
+                    try {
+                        val url = DeezerApi.retrofitService.getTrackById(trackId).preview
+                        url.let {
+                            currentTrackId = trackId
+                            player.reset()
+                            player.setDataSource(context, it.toUri())
+                            player.setOnPreparedListener {
+                                it.start()
+                                _isPlaying.value = true
+                            }
+                            player.setOnCompletionListener {
+                                it.seekTo(0)
+                                _isPlaying.value = false
+                            }
+                            player.prepareAsync()
+                        }
+                    } catch (_: Exception) { /* ignore */ }
                 }
             }
         }
     }
 
-    fun addAnswer() {
-        val d = _draft.value!!
-        d.answers.add(AnswerDraft())
-        answers.value = d.answers.toList()
+    fun resetPlayer() {
+        if (player.isPlaying) player.pause()
+        player.seekTo(0)
+        _isPlaying.value = false
+        currentTrackId = null
     }
 
-    fun updateAnswer(updated: AnswerDraft) {
-        val d = _draft.value!!
-        val idx = d.answers.indexOfFirst { it.id == updated.id }
-        if (idx >= 0) {
-            d.answers[idx] = updated
-            answers.value = d.answers.toList()
-        }
-    }
-
-    fun saveDraft() {
-        val d = _draft.value!!
-        d.questionText = questionText.value.orEmpty()
-        d.answers = answers.value!!.toMutableList()
-        if (parentVm.trackHasQuestion(trackId)) {
-            parentVm.updateDraft(d)
-        } else {
-            parentVm.addDraft(d)
-        }
+    override fun onCleared() {
+        super.onCleared()
+        player.release()
     }
 }

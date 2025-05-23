@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 class QuizListViewModel(application: Application) : AndroidViewModel(application) {
     private val dao  = AppDatabase.getInstance(application).quizDao()
-    private val repo = QuizRepository(dao)
+    private val repo = QuizRepository(application.applicationContext)
 
     val quizzes: LiveData<List<QuizEntity>> = dao.getAllQuizzes()
 

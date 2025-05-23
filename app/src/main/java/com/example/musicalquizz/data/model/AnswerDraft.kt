@@ -1,4 +1,3 @@
-// com/example/musicalquizz/data/model/AnswerDraft.kt
 package com.example.musicalquizz.data.model
 
 import com.example.musicalquizz.data.db.entities.AnswerEntity
@@ -19,11 +18,11 @@ data class AnswerDraft(
             )
     }
 
-    fun toEntity(): AnswerEntity =
+    fun toEntity(questionId: Long): AnswerEntity =
         AnswerEntity(
-            id = this.id,
-            questionId = this.questionId,
+            id         = this.id,
+            questionId = questionId,
             answerText = this.answerText,
-            isCorrect = this.isCorrect
+            isCorrect  = this.isCorrect
         )
 }

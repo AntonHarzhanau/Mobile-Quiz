@@ -15,9 +15,15 @@ import com.example.musicalquizz.databinding.ItemTrackQuizBinding
 
 class QuizTrackAdapter(
     private val onClick: (Track) -> Unit,
-    private val onLongClick: (Track, View) -> Unit,
-    private val hasQuestion: (Long) -> Boolean
+    private val onLongClick: (Track, View) -> Unit
 ) : ListAdapter<Track, QuizTrackAdapter.TrackVH>(DiffCallback()) {
+
+    private var hasQuestionSet: Set<Long> = emptySet()
+
+    fun setHasQuestions(ids: Set<Long>) {
+        hasQuestionSet = ids
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackVH {
         val b = ItemTrackQuizBinding.inflate(
@@ -36,7 +42,6 @@ class QuizTrackAdapter(
         RecyclerView.ViewHolder(b.root) {
 
         fun bind(item: Track) {
-
             b.tvTrackTitle.text  = item.title
             b.tvTrackArtist.text = item.artist.name
             Glide.with(b.imgTrackCover)
@@ -47,14 +52,15 @@ class QuizTrackAdapter(
             fun Int.dpToPx(): Int =
                 (this * b.root.context.resources.displayMetrics.density).toInt()
 
-            if (hasQuestion(item.id)) {
+            if (hasQuestionSet.contains(item.id)) {
                 val strokePx = 4.dpToPx()
                 b.card.setStrokeWidth(strokePx)
-                b.card.strokeColor = ContextCompat.getColor(b.root.context, R.color.green)
+                b.card.strokeColor = ContextCompat.getColor(
+                    b.root.context, R.color.green
+                )
             } else {
                 b.card.setStrokeWidth(0)
             }
-
 
             b.card.setOnClickListener   { onClick(item) }
             b.card.setOnLongClickListener {
